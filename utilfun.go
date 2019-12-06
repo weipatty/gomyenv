@@ -1,6 +1,5 @@
 package gomyenv
 
-
 import (
 	"time"
 )
