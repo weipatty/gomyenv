@@ -1,6 +1,8 @@
 package gomyenv
 
 import (
+	"reflect"
+	"strings"
 	"time"
 )
 
@@ -19,4 +21,30 @@ func Contains(a []string, x string) bool {
 		}
 	}
 	return false
+}
+
+func GetStringFmt(model string) (str string) {
+	return strings.Replace(model, "%d", "%s", -1)
+}
+
+func isSlice(obj interface{}) (val reflect.Value, ok bool) {
+	val = reflect.ValueOf(obj)
+	if val.Kind() == reflect.Slice {
+		ok = true
+	}
+	return
+}
+
+// interface{} -> []interface{}
+func CreateAnyTypeSlice(slice interface{}) ([]interface{}, bool) {
+	val, ok := isSlice(slice)
+	if !ok {
+		return nil, false
+	}
+	sliceLen := val.Len()
+	out := make([]interface{}, sliceLen)
+	for i := 0; i < sliceLen; i++ {
+		out[i] = val.Index(i).Interface()
+	}
+	return out, true
 }

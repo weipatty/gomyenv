@@ -63,7 +63,7 @@ func calcKafkaTopicTps(response_begin *sarama.OffsetResponse, response_end *sara
 	//PrintReflect(*response_end)
 	//PrintReflect(response_begin)
 	for topic, tb := range response_end.Blocks {
-		totalTps := float64(0.00)
+		//totalTps := float64(0.00)
 		for partition, pb := range tb {
 			if pb.Err == 0 {
 				//fmt.Println(topic,partition,"start",pb.Offset,"end",response_begin.Blocks[topic][partition].Offset)
@@ -73,13 +73,13 @@ func calcKafkaTopicTps(response_begin *sarama.OffsetResponse, response_end *sara
 					tps = float64(pb.Offset - response_begin.Blocks[topic][partition].Offset)
 					tps = tps / float64(intervalMs) * 1000
 				}
-				totalTps += tps
+				//totalTps += tps
 				(*topics)[topic] += fmt.Sprintf("(tps%d:%.2f)", partition, tps)
 			} else {
 				(*topics)[topic] += fmt.Sprintf("(tps%d:err%d)", partition, pb.Err)
 			}
 		}
-		(*topics)[topic] += fmt.Sprintf("(tpstotal:%.2f)", totalTps)
+		//(*topics)[topic] += fmt.Sprintf("(tpstotal:%.2f)", totalTps)
 	}
 	return nil
 }
@@ -90,6 +90,7 @@ func getKafkaTopicTps(broker *sarama.Broker, topics *map[string]string) (err err
 	for topic, _ := range *topics {
 		request.Topics = append(request.Topics, topic)
 	}
+	//if no topic,it return all
 	response, err := broker.GetMetadata(&request)
 	if err != nil {
 		return errors.New(err.Error() + "[request kafka GetMetadata fail]")
