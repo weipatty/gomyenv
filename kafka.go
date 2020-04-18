@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Shopify/sarama"
 	"time"
+	"strings"
 )
 
 func OpenBroker(broker *sarama.Broker) (err error) {
@@ -125,6 +126,49 @@ func GetKafkaTopicInfo(broker *sarama.Broker, topics *map[string]string) (err er
 	err = getKafkaTopicTps(broker, topics)
 	if err != nil {
 		return errors.New(err.Error() + "[getKafkaTopicTps fail]")
+	}
+	return nil
+}
+
+func CreateTopic(brokers string,topic string) (err error) {
+
+	config := sarama.NewConfig()
+	config.Version = sarama.V2_2_0_0
+
+	client, err := sarama.NewClient(strings.Split(brokers, ","), config)
+	if err != nil {
+		fmt.Println("NewClient fail", brokers, err)
+		return err
+	}
+	//fmt.Println(config.Version)
+	broker, err := client.Controller()
+	if err != nil {
+		fmt.Println("Controller fail", brokers, err)
+		return err
+	}
+	request := &sarama.CreateTopicsRequest{
+		Timeout: 5 * time.Second,
+		TopicDetails: map[string]*sarama.TopicDetail{
+			topic: &sarama.TopicDetail{
+				NumPartitions:     1,
+				ReplicationFactor: 3,
+				ReplicaAssignment: nil,
+				ConfigEntries:     nil,
+			},
+		},
+	}
+	//fmt.Printf("%#v\n", request)
+	response, err := broker.CreateTopics(request)
+	if err != nil {
+		fmt.Println("CreateTopics fail", brokers, err)
+		return err
+	}
+	//fmt.Printf("%#v\n", response)
+	for key, value := range response.TopicErrors {
+		fmt.Println("topic", key, int16(value.Err), value.Error())
+		if value.Err != sarama.ErrNoError && value.Err != sarama.ErrTopicAlreadyExists {
+			return errors.New(value.Error())
+		}
 	}
 	return nil
 }
