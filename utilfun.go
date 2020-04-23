@@ -2,9 +2,13 @@ package gomyenv
 
 import (
 	"errors"
+	"fmt"
 	"net"
+	"os"
+	"os/signal"
 	"reflect"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -95,4 +99,22 @@ func getAddrDefaultIP(addr net.Addr) string {
 	}
 
 	return ip.String()
+}
+
+func Wait(second int) (err error) {
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	fmt.Println("wait second:", second)
+	select {
+	case <-time.After(time.Second * time.Duration(second)):
+		{
+			fmt.Println("waited second:", second)
+		}
+	case <-sc:
+		{
+			close(sc)
+			return errors.New("get exit")
+		}
+	}
+	return nil
 }
