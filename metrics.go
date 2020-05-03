@@ -9,7 +9,7 @@ import (
 )
 
 type MetircsRow struct {
-	MetricsName string `json:"metricsName"`
+	MetricName string `json:"metricName"`
 	Timestamp   int64  `json:"timestamp"`
 	LongValue   int64  `json:"longValue"`
 }
@@ -22,7 +22,7 @@ func writeMetrics(l io.Writer, r metrics.Registry) {
 
 	r.Each(func(name string, i interface{}) {
 
-		row.MetricsName = name
+		row.MetricName = name
 
 		switch metric := i.(type) {
 		case metrics.Counter:
