@@ -10,11 +10,25 @@ import (
 
 type MetircsRow struct {
 	MetricName string `json:"metricName"`
-	Timestamp   int64  `json:"timestamp"`
-	LongValue   int64  `json:"longValue"`
+	Timestamp  int64  `json:"timestamp"`
+	LongValue  int64  `json:"longValue"`
 }
 
-func writeMetrics(l io.Writer, r metrics.Registry) {
+func NewRotateFile(p string) (logf *rotatelogs.RotateLogs, err error) {
+	logf, err = rotatelogs.New(
+		p+".%Y%m%d%H",
+		rotatelogs.WithLinkName(p),
+		rotatelogs.WithMaxAge(90*24*time.Hour),
+		rotatelogs.WithRotationTime(time.Hour),
+		rotatelogs.ForceNewFile(),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return logf, nil
+}
+
+func WriteMetrics(l io.Writer, r metrics.Registry) {
 
 	row := MetircsRow{
 		Timestamp: time.Now().UnixNano() / 1000,
@@ -31,6 +45,8 @@ func writeMetrics(l io.Writer, r metrics.Registry) {
 			row.LongValue = int64(metric.Snapshot().Mean())
 		case metrics.Meter:
 			row.LongValue = int64(metric.Snapshot().RateMean())
+		case metrics.Gauge:
+			row.LongValue = metric.Value()
 		}
 		buf, err := json.Marshal(row)
 		if err == nil {
@@ -44,13 +60,7 @@ func writeMetrics(l io.Writer, r metrics.Registry) {
 func RunReportPath(r metrics.Registry, freq time.Duration, p string, exit chan struct{}) {
 	//sc := make(chan os.Signal, 1)
 	//signal.Notify(sc, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-	logf, err := rotatelogs.New(
-		p+".%Y%m%d%H",
-		rotatelogs.WithLinkName(p),
-		rotatelogs.WithMaxAge(90*24*time.Hour),
-		rotatelogs.WithRotationTime(time.Hour),
-		rotatelogs.ForceNewFile(),
-	)
+	logf, err := NewRotateFile(p)
 	if err != nil {
 		return
 	}
@@ -62,7 +72,7 @@ Loop:
 			//logf.Write([]byte("exit"))
 			break Loop
 		case <-time.After(freq):
-			writeMetrics(logf, r)
+			WriteMetrics(logf, r)
 		}
 
 	}
