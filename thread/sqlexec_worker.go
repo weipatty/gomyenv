@@ -6,8 +6,8 @@ import (
 	"context"
 	"database/sql"
 	"github.com/go-sql-driver/mysql"
-	"gomyenv"
-	"gomyenv/statictics"
+	"github.com/weipatty/gomyenv"
+	"github.com/weipatty/gomyenv/statictics"
 	"math/rand"
 )
 

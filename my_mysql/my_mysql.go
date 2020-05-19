@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	_ "github.com/go-sql-driver/mysql"
-	"gomyenv"
+	"github.com/weipatty/gomyenv"
 	"sort"
 )
 

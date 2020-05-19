@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-sql-driver/mysql"
-	"gomyenv"
-	"gomyenv/my_mysql"
-	"gomyenv/statictics"
+	"github.com/weipatty/gomyenv"
+	"github.com/weipatty/gomyenv/my_mysql"
+	"github.com/weipatty/gomyenv/statictics"
 	"strconv"
 	"strings"
 	"time"
@@ -105,37 +105,37 @@ func (this *SqlWorkerManager) run(id int) {
 	conn_string = gomyenv.OptionsConvertDbConfigStringPortRand(this.myshard_config)
 	fmt.Println("myshard conn_string", conn_string)
 	myshard_db, err = sql.Open("mysql", conn_string)
-    gomyenv.CheckNil(err)
-    defer myshard_db.Close()
-    myshard_conn,err = myshard_db.Conn(context.Background())
-    gomyenv.CheckNil(err)
-    defer myshard_conn.Close()
+	gomyenv.CheckNil(err)
+	defer myshard_db.Close()
+	myshard_conn, err = myshard_db.Conn(context.Background())
+	gomyenv.CheckNil(err)
+	defer myshard_conn.Close()
 
-    conn_string = gomyenv.OptionsConvertDbConfigString(this.mysql_config)
-    if len(conn_string)>0{
-        mysql_db,err = sql.Open("mysql",conn_string)
-        gomyenv.CheckNil(err)
-        defer mysql_db.Close()
-        //if not doing this:Cannot assign requested address
-        mysql_conn,err = mysql_db.Conn(context.Background())
-        gomyenv.CheckNil(err)
-        defer mysql_conn.Close()
-    }
+	conn_string = gomyenv.OptionsConvertDbConfigString(this.mysql_config)
+	if len(conn_string) > 0 {
+		mysql_db, err = sql.Open("mysql", conn_string)
+		gomyenv.CheckNil(err)
+		defer mysql_db.Close()
+		//if not doing this:Cannot assign requested address
+		mysql_conn, err = mysql_db.Conn(context.Background())
+		gomyenv.CheckNil(err)
+		defer mysql_conn.Close()
+	}
 
-    //myshard_db.SetConnMaxLifetime()
-    //myshard_db.SetMaxIdleConns(0)
-    //mysql_db.SetMaxIdleConns(0)
+	//myshard_db.SetConnMaxLifetime()
+	//myshard_db.SetMaxIdleConns(0)
+	//mysql_db.SetMaxIdleConns(0)
 
-    //var max_idle_conn int = gomyenv.Frame().Options.GetInt("sql_worker_count")
-    //fmt.Println("max_idle_conn",max_idle_conn)
-    //myshard.SetMaxIdleConns(max_idle_conn)
+	//var max_idle_conn int = gomyenv.Frame().Options.GetInt("sql_worker_count")
+	//fmt.Println("max_idle_conn",max_idle_conn)
+	//myshard.SetMaxIdleConns(max_idle_conn)
 
-    for sql := range this.sqlChan {
-        this.statictics.total_sql.Add(1)
-        //retry at most 2
-        for i := 1; i <= 2; i++{
-            ret := this.execSql(&sql,mysql_conn,myshard_conn,i)
-            //ok
+	for sql := range this.sqlChan {
+		this.statictics.total_sql.Add(1)
+		//retry at most 2
+		for i := 1; i <= 2; i++ {
+			ret := this.execSql(&sql, mysql_conn, myshard_conn, i)
+			//ok
 			if ret == 0 {
 				break
 			}
@@ -172,13 +172,13 @@ func (this *SqlWorkerManager) execSql(sql_string *string, mysql_conn *sql.Conn, 
 		}
 		fmt.Println("reconnect myshard:" + *sql_string + ";" + err.Error())
 		return -1
-    }
-    defer myshard_rows.Close()
-    //only press myshard
-    if mysql_conn == nil{
-        return 0
-    }
-    mysql_rows,err := mysql_conn.QueryContext(context.Background(),*sql_string)
+	}
+	defer myshard_rows.Close()
+	//only press myshard
+	if mysql_conn == nil {
+		return 0
+	}
+	mysql_rows, err := mysql_conn.QueryContext(context.Background(), *sql_string)
 	//mysql_rows,err := this.mysql.Query(sql_string)
 	if err != nil {
 		this.statictics.error_sql_mysql.Add(1)
