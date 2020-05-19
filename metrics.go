@@ -57,7 +57,7 @@ func WriteMetrics(l io.Writer, r metrics.Registry) {
 
 }
 
-func RunReportPath(r metrics.Registry, freq time.Duration, p string, exit chan struct{}) {
+func RunReportPath(r metrics.Registry, freq time.Duration, p string, exit <-chan interface{}) {
 	//sc := make(chan os.Signal, 1)
 	//signal.Notify(sc, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	logf, err := NewRotateFile(p)
@@ -74,6 +74,5 @@ Loop:
 		case <-time.After(freq):
 			WriteMetrics(logf, r)
 		}
-
 	}
 }
