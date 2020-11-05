@@ -31,4 +31,3 @@ func TcpSend(addrString string, send string) (result []byte, err error) {
 	}
 	return result, nil
 }
-

@@ -72,13 +72,18 @@ func DefaultIP() (ip string, err error) {
 
 		for _, addr := range addrs {
 			if ipStr := getAddrDefaultIP(addr); len(ipStr) > 0 {
-				return ipStr, nil
+				ip = ipStr
+				if !strings.HasPrefix(ip, "192.168.") && !strings.HasPrefix(ip, "10.") {
+					return ip, nil
+				}
+				//return ipStr, nil
 			}
 		}
 	}
-
-	err = errors.New("no ip found")
-	return
+	if ip == "127.0.0.1" {
+		err = errors.New("no ip found")
+	}
+	return ip, err
 }
 
 func getAddrDefaultIP(addr net.Addr) string {
