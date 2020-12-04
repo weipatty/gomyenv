@@ -85,7 +85,7 @@ func calcKafkaTopicTps(response_begin *sarama.OffsetResponse, response_end *sara
 	return nil
 }
 
-func getKafkaTopicTps(broker *sarama.Broker, topics *map[string]string) (err error) {
+func GetKafkaTopicTps(broker *sarama.Broker, topics *map[string]string) (err error) {
 	var request sarama.MetadataRequest
 	request.AllowAutoTopicCreation = false
 	for topic, _ := range *topics {
@@ -123,7 +123,7 @@ func GetKafkaTopicInfo(broker *sarama.Broker, topics *map[string]string) (err er
 	if err != nil {
 		return errors.New(err.Error() + "[getTopicRetention fail]")
 	}
-	err = getKafkaTopicTps(broker, topics)
+	err = GetKafkaTopicTps(broker, topics)
 	if err != nil {
 		return errors.New(err.Error() + "[getKafkaTopicTps fail]")
 	}
@@ -158,7 +158,7 @@ func GetTopicInfo(brokers string, topics *map[string]string) (err error) {
 	if err != nil {
 		return errors.New(err.Error() + "[getTopicRetention fail]")
 	}
-	err = getKafkaTopicTps(broker, topics)
+	err = GetKafkaTopicTps(broker, topics)
 	if err != nil {
 		return errors.New(err.Error() + "[getKafkaTopicTps fail]")
 	}
