@@ -130,30 +130,33 @@ func GetKafkaTopicInfo(broker *sarama.Broker, topics *map[string]string) (err er
 	return nil
 }
 
-func getController(brokers string) (controller *sarama.Broker, err error) {
+// caller need to call client.Close()
+func getController(brokers string) (controller *sarama.Broker, client sarama.Client,err error) {
 	config := sarama.NewConfig()
 	config.Version = sarama.V2_2_0_0
 
-	client, err := sarama.NewClient(strings.Split(brokers, ","), config)
+	client, err = sarama.NewClient(strings.Split(brokers, ","), config)
 	if err != nil {
 		fmt.Println("NewClient fail", brokers, err)
-		return nil, err
+		return nil, nil,err
 	}
 	//fmt.Println(config.Version)
 	broker, err := client.Controller()
 	if err != nil {
 		fmt.Println("Controller fail", brokers, err)
-		return nil, err
+		client.Close()
+		return nil, nil,err
 	}
-	return broker, nil
+	return broker, client,nil
 }
 
 func GetTopicInfo(brokers string, topics *map[string]string) (err error) {
-	broker, err := getController(brokers)
+	broker,client, err := getController(brokers)
 	if err != nil {
 		fmt.Println("getController fail", brokers, err)
 		return err
 	}
+	defer client.Close()
 	err = getTopicRetention(broker, topics)
 	if err != nil {
 		return errors.New(err.Error() + "[getTopicRetention fail]")
@@ -166,11 +169,12 @@ func GetTopicInfo(brokers string, topics *map[string]string) (err error) {
 }
 
 func CreateTopic(brokers string, topic string) (err error) {
-	broker, err := getController(brokers)
+	broker,client, err := getController(brokers)
 	if err != nil {
 		fmt.Println("getController fail", brokers, err)
 		return err
 	}
+	defer client.Close()
 	//request
 	request := &sarama.CreateTopicsRequest{
 		Timeout: 5 * time.Second,
